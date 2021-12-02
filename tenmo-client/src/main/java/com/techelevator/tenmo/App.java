@@ -47,6 +47,7 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 
 	private void mainMenu() {
 		while(true) {
+			System.out.print("\nUser name : "+currentUser.getUser().getUsername());
 			String choice = (String)console.getChoiceFromOptions(MAIN_MENU_OPTIONS);
 			if(MAIN_MENU_OPTION_VIEW_BALANCE.equals(choice)) {
 				viewCurrentBalance();
