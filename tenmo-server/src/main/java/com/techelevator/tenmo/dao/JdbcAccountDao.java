@@ -17,6 +17,7 @@ public class JdbcAccountDao implements AccountDao {
         this.jdbcTemplate = new JdbcTemplate(ds);
     }
 
+
     @Override
     public Balance getBalance(String user) {
         String sql = "SELECT balance FROM accounts JOIN users ON accounts.user_id = users.user_id WHERE username = ?";
@@ -58,7 +59,7 @@ public class JdbcAccountDao implements AccountDao {
                 "SET balance = ? " +
                 "WHERE account_id = ?";
 
-        jdbcTemplate.update(sql, accountToUpdate.getBalance().getBalance(), accountToUpdate.getAccount_id());
+        jdbcTemplate.update(sql, accountToUpdate.getBalance().getBalance(), accountToUpdate.getAccountId());
     }
 
     private Account mapResultsToAccount(SqlRowSet result) {
@@ -70,5 +71,4 @@ public class JdbcAccountDao implements AccountDao {
         balance.setBalance(new BigDecimal(accountBalance));
         return new Account(accountId, userAccountId, balance);
     }
-
 }

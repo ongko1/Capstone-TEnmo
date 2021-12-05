@@ -1,9 +1,13 @@
 package com.techelevator.view;
 
 
+import com.techelevator.tenmo.model.User;
+import io.cucumber.datatable.internal.difflib.StringUtills;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.util.Scanner;
 
 public class ConsoleService {
@@ -72,5 +76,48 @@ public class ConsoleService {
 			}
 		} while(result == null);
 		return result;
+	}
+
+	public void printUsers(User[] users, String userName) {
+		// list all user except current user
+		for(User user: users) {
+			if (user.getUsername().equals(userName)) continue;
+			out.println(user.getId() + "          " + user.getUsername());
+		}
+		out.println("-------------------------------");
+		out.flush();
+	}
+
+	public void printTransfers(int transferId, String fromOrTo, BigDecimal amount, int statusId) {
+		String status="";
+		if (statusId==1) status="Pending";
+		if (statusId==2) status="Approved";
+		if (statusId==3) status="Rejected";
+		out.format("%-5d %-15s $%10s %-10s", transferId, fromOrTo, amount, status);
+		out.println();
+	}
+
+	public void printTransferDetails(int id, String from, String to, String type, String status, BigDecimal amount) {
+		out.println("-------------------------------");
+		out.println("Transfer Details");
+		out.println("-------------------------------");
+		out.println("Id: " + id);
+		if(!type.equals("Request")) {
+			out.println("From: " + from);
+			out.println("To: " + to);
+		}
+		else {
+			out.println("Request From: " + to);
+			out.println("To: " + from);
+		}
+		out.println("Type: " + type);
+		out.println("Status: " + status);
+		out.println("Amount: $" + amount);
+	}
+
+	public void printApproveOrRejectOptions() {
+		out.println("1: Approve");
+		out.println("2: Reject");
+		out.println("0: Don't approve or reject\n");
 	}
 }

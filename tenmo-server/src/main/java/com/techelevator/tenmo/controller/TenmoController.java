@@ -13,18 +13,18 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@PreAuthorize("isAuthenticated")
+@PreAuthorize("isAuthenticated()")
 public class TenmoController {
-    //@Autowired
-    AccountDao accountDao;
-    //@Autowired
-    UserDao userDao;
-    //@Autowired
-    TransferDao transferDao;
-    //@Autowired
-    TransferTypeDao transferTypeDao;
-    //@Autowired
-    TransferStatusDao transferStatusDao;
+    @Autowired
+    private AccountDao accountDao;
+    @Autowired
+    private UserDao userDao;
+    @Autowired
+    private TransferDao transferDao;
+    @Autowired
+    private TransferTypeDao transferTypeDao;
+    @Autowired
+    private TransferStatusDao transferStatusDao;
 
     @RequestMapping(path = "/balance", method = RequestMethod.GET)
     public Balance getBalance(Principal principal) {
