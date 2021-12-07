@@ -1,11 +1,15 @@
 package com.techelevator.tenmo.model;
 
+import com.techelevator.tenmo.exceptions.InsufficientFunds;
+
+import java.math.BigDecimal;
+
 public class Account {
     private int accountId;
     private int userId;
-    private Balance balance;
+    private BigDecimal balance;
 
-    public Account(int accountId, int userId, Balance balance) {
+    public Account(int accountId, int userId, BigDecimal balance) {
         this.accountId = accountId;
         this.userId = userId;
         this.balance = balance;
@@ -27,11 +31,24 @@ public class Account {
         this.userId = userId;
     }
 
-    public Balance getBalance() {
-        return balance;
-    }
+    public BigDecimal getBalance() { return balance; }
 
-    public void setBalance(Balance balance) {
+    public void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
+
+    public void sendMoney(BigDecimal amount) throws InsufficientFunds {
+        BigDecimal newBalance = new BigDecimal(String.valueOf(getBalance())).subtract(amount);
+        if (newBalance.compareTo(BigDecimal.ZERO) >= 0) {
+            setBalance(newBalance);
+        } else {
+            throw new InsufficientFunds();
+        }
+
+    }
+
+    public void receiveMoney(BigDecimal amount) {
+        this.balance = new BigDecimal(String.valueOf(getBalance())).add(amount);
+    }
+
 }

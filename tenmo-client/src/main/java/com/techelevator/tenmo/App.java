@@ -37,6 +37,7 @@ public class App {
 	private TransferStatusService transferStatusService = new TransferStatusService(API_BASE_URL);
 	private TransferService transferService = new TransferService(API_BASE_URL);
 
+
 	public static void main(String[] args) {
 		App app = new App(new ConsoleService(System.in, System.out), new AuthenticationService(API_BASE_URL));
 		app.run();
@@ -45,11 +46,6 @@ public class App {
 	public App(ConsoleService console, AuthenticationService authenticationService) {
 		this.console = console;
 		this.authenticationService = authenticationService;
-		//this.accountService = new AccountService(API_BASE_URL);
-		//this.userService = new UserService();
-		//this.transferTypeService = new TransferTypeService(API_BASE_URL);
-		//this.transferStatusService = new TransferStatusService(API_BASE_URL);
-		//this.transferService = new TransferService(API_BASE_URL);
 	}
 
 	public void run() {
@@ -85,8 +81,10 @@ public class App {
 	}
 
 	private void viewCurrentBalance() {
-		Balance balance = accountService.getBalance(currentUser);
-		System.out.println("Your current account balance is:  $" + balance.getBalance());
+		BigDecimal balance = accountService.getBalance(currentUser);
+		System.out.println("Your current account balance is:  $" + balance);
+		console.getUserInput("\nPress Enter to continue");
+
 
 	}
 
@@ -98,7 +96,6 @@ public class App {
 		System.out.println("ID     From/To          Amount     Status");
 		System.out.println("--------------------------------------------");
 
-		int currentUserAccountId = accountService.getAccountByUserId(currentUser, currentUser.getUser().getId()).getAccountId();
 		for(Transfer transfer: transfers) {
 			printTransfer(currentUser, transfer);
 		}
@@ -243,18 +240,11 @@ public class App {
 	}
 
 	private void printTransfer(AuthenticatedUser authenticatedUser, Transfer transfer) {
-		String fromOrTo = "";
-		int accountFrom = transfer.getAccountFrom();
-		int accountTo = transfer.getAccountTo();
-
-		if (accountService.getAccountById(currentUser, accountTo).getUserId() == authenticatedUser.getUser().getId()) {
-			int accountFromUserId = accountService.getAccountById(currentUser, accountFrom).getUserId();
-			String userFromName = userService.getUserByUserId(currentUser, accountFromUserId).getUsername();
-			fromOrTo = "From: " + userFromName;
+		String fromOrTo;
+		if(transfer.getUserTo().equals(authenticatedUser.getUser().getUsername())) {
+			fromOrTo = "From: " + transfer.getUserFrom();
 		} else {
-			int accountToUserId = accountService.getAccountById(currentUser, accountTo).getUserId();
-			String userToName = userService.getUserByUserId(currentUser, accountToUserId).getUsername();
-			fromOrTo = "To: " + userToName;
+			fromOrTo = "To: "+transfer.getUserTo();
 		}
 
 		console.printTransfers(transfer.getTransferId(), fromOrTo, transfer.getAmount(), transfer.getTransferStatusId());
@@ -264,23 +254,17 @@ public class App {
 	private void printTransferDetails(AuthenticatedUser currentUser, Transfer transferChoice) {
 		int id = transferChoice.getTransferId();
 		BigDecimal amount = transferChoice.getAmount();
-		int fromAccount = transferChoice.getAccountFrom();
-		int toAccount = transferChoice.getAccountTo();
 		int transactionTypeId = transferChoice.getTransferTypeId();
 		int transactionStatusId = transferChoice.getTransferStatusId();
 
-		// get user Id and user name from account From in transfer table
-		// add Me word if it's current user
-		int fromUserId = accountService.getAccountById(currentUser, fromAccount).getUserId();
-		String fromUserName = userService.getUserByUserId(currentUser, fromUserId).getUsername();
+		String fromUserName = transferChoice.getUserFrom();
 		// add Me word if it's current user
 		if(isMe(currentUser,fromUserName))
 			fromUserName=fromUserName+" (Me)";
 
 		// get user Id and user name from account To in transfer table
 		// add Me world if it's current user
-		int toUserId = accountService.getAccountById(currentUser, toAccount).getUserId();
-		String toUserName = userService.getUserByUserId(currentUser, toUserId).getUsername();
+		String toUserName = transferChoice.getUserTo();
 		if(isMe(currentUser,toUserName))
 			toUserName=toUserName+" (Me)";
 
@@ -288,6 +272,7 @@ public class App {
 		String transactionStatus = transferStatusService.getTransferStatusById(currentUser, transactionStatusId).getTransferStatusDesc();
 
 		console.printTransferDetails(id, fromUserName, toUserName, transactionType, transactionStatus, amount);
+		console.getUserInput("\nPress Enter to continue");
 	}
 
 	private boolean isMe(AuthenticatedUser currentUser, String userName) {

@@ -14,6 +14,7 @@ public class TransferService {
     private String baseUrl;
     private RestTemplate restTemplate = new RestTemplate();
 
+
     public TransferService(String url) {
         this.baseUrl = url;
     }
@@ -54,45 +55,6 @@ public class TransferService {
         }
         return transfers;
     }
-
-    /*
-    public Transfer getTransferFromTransferId(AuthenticatedUser authenticatedUser, int id) {
-        Transfer transfer = null;
-        try {
-            transfer = restTemplate.exchange(baseUrl + "/transfers/" + id,
-                    HttpMethod.GET,
-                    makeEntity(authenticatedUser),
-                    Transfer.class
-            ).getBody();
-        } catch(RestClientResponseException e) {
-            System.out.println("Could not complete request. Code: " + e.getRawStatusCode());
-        } catch(ResourceAccessException e) {
-            System.out.println("Server network issue. Please try again.");
-        }
-        return transfer;
-    }
-
-     */
-
-    /*
-    public Transfer[] getAllTransfers(AuthenticatedUser authenticatedUser) {
-        Transfer[] transfers = new Transfer[0];
-
-        try {
-            transfers = restTemplate.exchange(baseUrl + "/transfers",
-                    HttpMethod.GET,
-                    makeEntity(authenticatedUser),
-                    Transfer[].class
-            ).getBody();
-        } catch(RestClientResponseException e) {
-            System.out.println("Could not complete request. Code: " + e.getRawStatusCode());
-        } catch(ResourceAccessException e) {
-            System.out.println("Server network issue. Please try again.");
-        }
-        return transfers;
-    }
-
-     */
 
     private HttpEntity makeEntity(AuthenticatedUser authenticatedUser) {
         HttpHeaders headers = new HttpHeaders();

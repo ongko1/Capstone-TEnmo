@@ -5,12 +5,17 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class JdbcTransferDao implements TransferDao {
+    private final int TRANSFER_TYPE_SEND = 2;
+    private final int TRANSFER_STATUS_APPROVED = 2;
+    private final int TRANSFER_STATUS_DENIED = 3;
+    private final int TRANSFER_TYPE_REQUEST = 1;
+    private final int TRANSFER_STATUS_PENDING = 1;
+
     private JdbcTemplate jdbcTemplate;
 
     public JdbcTransferDao(JdbcTemplate jdbcTemplate) {
@@ -25,62 +30,73 @@ public class JdbcTransferDao implements TransferDao {
     }
 
     @Override
-    public List<Transfer> getTransfersByUserId(int userId) {
-        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
-                "FROM transfers " +
-                "JOIN accounts ON accounts.account_id = transfers.account_from OR accounts.account_id = transfers.account_to " +
-                "WHERE user_id = ?";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
+    public List<Transfer> getTransferByUserId(int userId) {
         List<Transfer> transfers = new ArrayList<>();
-
-        while(results.next()) {
-            transfers.add(mapResultToTransfer(results));
+        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, amount, user_from.username AS user_from, " +
+                "user_to.username AS user_to, account_from.account_id AS account_from_id, account_to.account_id AS account_to_id " +
+                "FROM transfers " +
+                "JOIN accounts AS account_from ON transfers.account_from = account_from.account_id " +
+                "JOIN accounts AS account_to ON transfers.account_to = account_to.account_id " +
+                "JOIN users AS user_from ON account_from.user_id = user_from.user_id " +
+                "JOIN users AS user_to ON account_to.user_id = user_to.user_id " +
+                "WHERE account_from.user_id = ? OR account_to.user_id = ?;";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, userId, userId);
+        while (rowSet.next()) {
+            transfers.add(mapRowToTransfer(rowSet));
         }
-
         return transfers;
     }
 
     @Override
-    public Transfer getTransferByTransferId(int transferId) {
-        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
-                "FROM transfers WHERE transfer_id = ?";
-        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, transferId);
-        Transfer transfer = null;
-
-        if(result.next()){
-            transfer = mapResultToTransfer(result);
+    public Transfer getTransferByTransferId(int id) {
+        Transfer transfer;
+        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, amount, user_from.username AS user_from, " +
+                "user_to.username AS user_to, account_from.account_id AS account_from_id, account_to.account_id AS account_to_id " +
+                "FROM transfers " +
+                "JOIN accounts AS account_from ON transfers.account_from = account_from.account_id " +
+                "JOIN accounts AS account_to ON transfers.account_to = account_to.account_id " +
+                "JOIN users AS user_from ON account_from.user_id = user_from.user_id " +
+                "JOIN users AS user_to ON account_to.user_id = user_to.user_id WHERE transfer_id = ?;";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, id);
+        if (rowSet.next()) {
+            transfer = mapRowToTransfer(rowSet);
+        } else {
+            transfer = null;
         }
-
         return transfer;
     }
 
     @Override
     public List<Transfer> getAllTransfers() {
-        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
-                "FROM transfers";
-
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
         List<Transfer> transfers = new ArrayList<>();
-
-        while(results.next()){
-            transfers.add(mapResultToTransfer(results));
+        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, amount, user_from.username AS user_from, " +
+                "user_to.username AS user_to, account_from.account_id AS account_from_id, account_to.account_id AS account_to_id " +
+                "FROM transfers " +
+                "JOIN accounts AS account_from ON transfers.account_from = account_from.account_id " +
+                "JOIN accounts AS account_to ON transfers.account_to = account_to.account_id " +
+                "JOIN users AS user_from ON account_from.user_id = user_from.user_id " +
+                "JOIN users AS user_to ON account_to.user_id = user_to.user_id;";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql);
+        while (rowSet.next()) {
+            transfers.add(mapRowToTransfer(rowSet));
         }
-
         return transfers;
     }
 
     @Override
     public List<Transfer> getPendingTransfers(int userId) {
-        String sql = "SELECT transfer_id, transfer_type_id, transfers.transfer_status_id, account_from, account_to, amount " +
-                "FROM transfers " +
-                "JOIN accounts ON accounts.account_id = transfers.account_from " +
-                "JOIN transfer_statuses ON transfers.transfer_status_id = transfer_statuses.transfer_status_id " +
-                "WHERE user_id = ? AND transfer_status_desc = 'Pending'";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
         List<Transfer> transfers = new ArrayList<>();
-
-        while(results.next()) {
-            transfers.add(mapResultToTransfer(results));
+        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, amount, user_from.username AS user_from, " +
+                "user_to.username AS user_to, account_from.account_id AS account_from_id, account_to.account_id AS account_to_id " +
+                "FROM transfers " +
+                "JOIN accounts AS account_from ON transfers.account_from = account_from.account_id " +
+                "JOIN accounts AS account_to ON transfers.account_to = account_to.account_id " +
+                "JOIN users AS user_from ON account_from.user_id = user_from.user_id " +
+                "JOIN users AS user_to ON account_to.user_id = user_to.user_id " +
+                "WHERE account_from.user_id = ? AND transfer_status_id = 1";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, userId);
+        while (rowSet.next()) {
+            transfers.add(mapRowToTransfer(rowSet));
         }
         return transfers;
     }
@@ -94,17 +110,16 @@ public class JdbcTransferDao implements TransferDao {
         jdbcTemplate.update(sql, transfer.getTransferStatusId(), transfer.getTransferId());
     }
 
-    private Transfer mapResultToTransfer(SqlRowSet result) {
-        int transferId = result.getInt("transfer_id");
-        int transferTypeId = result.getInt("transfer_type_id");
-        int transferStatusId = result.getInt("transfer_status_id");
-        int accountFrom = result.getInt("account_from");
-        int accountTo = result.getInt("account_to");
-        String amountDouble = result.getString("amount");
-
-        Transfer transfer = new Transfer(transferId, transferTypeId, transferStatusId, accountFrom, accountTo, new BigDecimal(amountDouble));
+    private Transfer mapRowToTransfer(SqlRowSet rowSet) {
+        Transfer transfer = new Transfer();
+        transfer.setTransferId(rowSet.getInt("transfer_id"));
+        transfer.setTransferTypeId(rowSet.getInt("transfer_type_id"));
+        transfer.setTransferStatusId(rowSet.getInt("transfer_status_id"));
+        transfer.setAccountFrom(rowSet.getInt("account_from_id"));
+        transfer.setAccountTo(rowSet.getInt("account_to_id"));
+        transfer.setUserFrom(rowSet.getString("user_from"));
+        transfer.setUserTo(rowSet.getString("user_to"));
+        transfer.setAmount(rowSet.getBigDecimal("amount"));
         return transfer;
     }
-
-
 }

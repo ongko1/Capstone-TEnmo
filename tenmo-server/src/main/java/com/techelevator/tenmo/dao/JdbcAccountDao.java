@@ -1,7 +1,6 @@
 package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.model.Account;
-import com.techelevator.tenmo.model.Balance;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
@@ -17,18 +16,19 @@ public class JdbcAccountDao implements AccountDao {
         this.jdbcTemplate = new JdbcTemplate(ds);
     }
 
-
     @Override
-    public Balance getBalance(String user) {
+    public BigDecimal getBalance(String user) {
         String sql = "SELECT balance FROM accounts JOIN users ON accounts.user_id = users.user_id WHERE username = ?";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, user);
-        Balance balance = new Balance();
+        BigDecimal balance = null;
 
         if (results.next()) {
             String accountBalance = results.getString("balance");
-            balance.setBalance(new BigDecimal(accountBalance));
+            balance = new BigDecimal(accountBalance);
         }
         return balance;
+
+
     }
 
     @Override
@@ -59,16 +59,14 @@ public class JdbcAccountDao implements AccountDao {
                 "SET balance = ? " +
                 "WHERE account_id = ?";
 
-        jdbcTemplate.update(sql, accountToUpdate.getBalance().getBalance(), accountToUpdate.getAccountId());
+        jdbcTemplate.update(sql, accountToUpdate.getBalance(), accountToUpdate.getAccountId());
     }
+
 
     private Account mapResultsToAccount(SqlRowSet result) {
         int accountId = result.getInt("account_id");
         int userAccountId = result.getInt("user_id");
-
-        Balance balance = new Balance();
-        String accountBalance = result.getString("balance");
-        balance.setBalance(new BigDecimal(accountBalance));
-        return new Account(accountId, userAccountId, balance);
+        BigDecimal accountBalance = result.getBigDecimal("balance");
+        return new Account(accountId, userAccountId, accountBalance);
     }
 }

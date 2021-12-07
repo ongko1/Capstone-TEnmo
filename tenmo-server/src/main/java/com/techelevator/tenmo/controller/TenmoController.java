@@ -20,14 +20,14 @@ public class TenmoController {
     @Autowired
     private UserDao userDao;
     @Autowired
-    private TransferDao transferDao;
+    private  TransferDao transferDao;
     @Autowired
     private TransferTypeDao transferTypeDao;
     @Autowired
     private TransferStatusDao transferStatusDao;
 
     @RequestMapping(path = "/balance", method = RequestMethod.GET)
-    public Balance getBalance(Principal principal) {
+    public BigDecimal getBalance(Principal principal) {
         System.out.println(principal.getName());
         return accountDao.getBalance(principal.getName());
     }
@@ -46,11 +46,13 @@ public class TenmoController {
         Account accountTo = accountDao.getAccountByAccountID(transfer.getAccountTo());
 
         if(transfer.getTransferStatusId()==2) {
-            accountFrom.getBalance().sendMoney(amountToTransfer);
-            accountTo.getBalance().receiveMoney(amountToTransfer);
+            // check balance
+            accountFrom.sendMoney(amountToTransfer);
+            accountTo.receiveMoney(amountToTransfer);
         }
         transferDao.createTransfer(transfer);
 
+        // update balance
         accountDao.updateAccount(accountFrom);
         accountDao.updateAccount(accountTo);
     }
@@ -75,24 +77,24 @@ public class TenmoController {
         return accountDao.getAccountByAccountID(id);
     }
 
-    @RequestMapping(path="/transfers/user/{userId}", method = RequestMethod.GET)
-    public List<Transfer> getTransfersByUserId(@PathVariable int userId) {
-        return transferDao.getTransfersByUserId(userId);
-    }
-
     @RequestMapping(path="/transfers/{id}", method = RequestMethod.GET)
     public Transfer getTransferById(@PathVariable int id) {
         return transferDao.getTransferByTransferId(id);
     }
 
-    @RequestMapping(path="/users/{id}", method = RequestMethod.GET)
-    public User getUserByUserId(@PathVariable int id) {
-        return userDao.getUserByUserId(id);
-    }
-
     @RequestMapping(path="/transfers", method = RequestMethod.GET)
     public List<Transfer> getAllTransfers() {
         return transferDao.getAllTransfers();
+    }
+
+    @RequestMapping(path="/transfers/user/{userId}", method = RequestMethod.GET)
+    public List<Transfer> getTransferByUserId(@PathVariable int userId) {
+        return transferDao.getTransferByUserId(userId);
+    }
+
+    @RequestMapping(path="/users/{id}", method = RequestMethod.GET)
+    public User getUserByUserId(@PathVariable int id) {
+        return userDao.getUserByUserId(id);
     }
 
     @RequestMapping(path="/transfertype/{id}", method = RequestMethod.GET)
@@ -119,8 +121,9 @@ public class TenmoController {
             Account accountFrom = accountDao.getAccountByAccountID(transfer.getAccountFrom());
             Account accountTo = accountDao.getAccountByAccountID(transfer.getAccountTo());
 
-            accountFrom.getBalance().sendMoney(amountToTransfer);
-            accountTo.getBalance().receiveMoney(amountToTransfer);
+            // UPDATE BALANCE
+            accountFrom.sendMoney(amountToTransfer);
+            accountTo.receiveMoney(amountToTransfer);
 
             transferDao.updateTransfer(transfer);
 

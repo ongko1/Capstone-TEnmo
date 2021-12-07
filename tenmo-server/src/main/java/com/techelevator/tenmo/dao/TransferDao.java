@@ -5,15 +5,15 @@ import com.techelevator.tenmo.model.Transfer;
 import java.util.List;
 
 public interface TransferDao {
-    void createTransfer(Transfer transfer);
+    void createTransfer(Transfer transfer2);
 
-    List<Transfer> getTransfersByUserId(int userId);
+    List<Transfer> getTransferByUserId(int userId);
 
-    Transfer getTransferByTransferId(int transferId);
+    Transfer getTransferByTransferId(int id);
 
     List<Transfer> getAllTransfers();
 
     List<Transfer> getPendingTransfers(int userId);
 
-    void updateTransfer(Transfer transfer);
+    void updateTransfer(Transfer transfer2);
 }
