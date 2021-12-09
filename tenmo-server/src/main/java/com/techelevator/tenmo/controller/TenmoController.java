@@ -15,16 +15,19 @@ import java.util.List;
 @RestController
 @PreAuthorize("isAuthenticated()")
 public class TenmoController {
+    private final int TRANSFER_TYPE_REQUEST = 1;
+    private final int TRANSFER_TYPE_SEND = 2;
+
+    private final int TRANSFER_STATUS_PENDING = 1;
+    private final int TRANSFER_STATUS_APPROVED = 2;
+    private final int TRANSFER_STATUS_REJECTED = 3;
+
     @Autowired
     private AccountDao accountDao;
     @Autowired
     private UserDao userDao;
     @Autowired
     private  TransferDao transferDao;
-    @Autowired
-    private TransferTypeDao transferTypeDao;
-    @Autowired
-    private TransferStatusDao transferStatusDao;
 
     @RequestMapping(path = "/balance", method = RequestMethod.GET)
     public BigDecimal getBalance(Principal principal) {
@@ -57,16 +60,6 @@ public class TenmoController {
         accountDao.updateAccount(accountTo);
     }
 
-    @RequestMapping(path="/transfertype/filter", method = RequestMethod.GET)
-    public TransferType getTransferTypeFromDescription(@RequestParam String description) {
-        return transferTypeDao.getTransferTypeFromDescription(description);
-    }
-
-    @RequestMapping(path="/transferstatus/filter", method = RequestMethod.GET)
-    public TransferStatus getTransferStatusByDescription(@RequestParam String description) {
-        return transferStatusDao.getTransferStatusByDesc(description);
-    }
-
     @RequestMapping(path="/account/user/{id}", method = RequestMethod.GET)
     public Account getAccountByUserId(@PathVariable int id) {
         return accountDao.getAccountByUserID(id);
@@ -97,15 +90,6 @@ public class TenmoController {
         return userDao.getUserByUserId(id);
     }
 
-    @RequestMapping(path="/transfertype/{id}", method = RequestMethod.GET)
-    public TransferType getTransferDescFromId(@PathVariable int id)  {
-        return transferTypeDao.getTransferTypeFromId(id);
-    }
-    @RequestMapping(path="/transferstatus/{id}", method = RequestMethod.GET)
-    public TransferStatus getTransferStatusFromId(@PathVariable int id) {
-        return transferStatusDao.getTransferStatusById(id);
-    }
-
     @RequestMapping(path="/transfers/user/{userId}/pending", method = RequestMethod.GET)
     public List<Transfer> getPendingTransfersByUserId(@PathVariable int userId) {
         return transferDao.getPendingTransfers(userId);
@@ -115,7 +99,7 @@ public class TenmoController {
     public void updateTransferStatus(@RequestBody Transfer transfer, @PathVariable int id) throws InsufficientFunds {
 
         // only go through with the transfer if it is approved
-        if(transfer.getTransferStatusId() == transferStatusDao.getTransferStatusByDesc("Approved").getTransferStatusId()) {
+        if(transfer.getTransferStatusId() == TRANSFER_STATUS_APPROVED) {
 
             BigDecimal amountToTransfer = transfer.getAmount();
             Account accountFrom = accountDao.getAccountByAccountID(transfer.getAccountFrom());

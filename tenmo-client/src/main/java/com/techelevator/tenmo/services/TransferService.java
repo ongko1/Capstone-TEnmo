@@ -2,6 +2,7 @@ package com.techelevator.tenmo.services;
 
 import com.techelevator.tenmo.model.AuthenticatedUser;
 import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.view.ConsoleService;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -10,10 +11,12 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.Console;
+
 public class TransferService {
     private String baseUrl;
     private RestTemplate restTemplate = new RestTemplate();
-
+    private ConsoleService console = new ConsoleService(System.in, System.out);
 
     public TransferService(String url) {
         this.baseUrl = url;
@@ -31,7 +34,7 @@ public class TransferService {
             restTemplate.exchange(url, HttpMethod.POST, entity, Transfer.class);
         } catch(RestClientResponseException e) {
             if (e.getMessage().contains("Insufficient Funds")) {
-                System.out.println("You don't have enough money for that transaction.");
+                console.getUserInput("You don't have enough money for that transaction, press Enter to continue.");
             } else {
                 System.out.println("Could not complete request. Code: " + e.getRawStatusCode());
             }
@@ -91,7 +94,7 @@ public class TransferService {
             restTemplate.exchange(url, HttpMethod.PUT, entity, Transfer.class);
         } catch(RestClientResponseException e) {
             if (e.getMessage().contains("Insufficient Funds")) {
-                System.out.println("You don't have enough money for that transaction.");
+                console.getUserInput("You don't have enough money for that transaction, press Enter to continue.");
             } else {
                 System.out.println("Could not complete request. Code: " + e.getRawStatusCode());
             }

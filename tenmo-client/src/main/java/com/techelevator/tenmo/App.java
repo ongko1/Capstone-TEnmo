@@ -13,6 +13,13 @@ import java.math.BigDecimal;
 public class App {
 
 	private static final String API_BASE_URL = "http://localhost:8080/";
+	private final int TRANSFER_TYPE_REQUEST = 1;
+	private final int TRANSFER_TYPE_SEND = 2;
+
+	private final int TRANSFER_STATUS_PENDING = 1;
+	private final int TRANSFER_STATUS_APPROVED = 2;
+	private final int TRANSFER_STATUS_REJECTED = 3;
+
 	// MENU OPTION LOGIN & REGISTER
 	private static final String MENU_OPTION_EXIT = "Exit";
 	private static final String LOGIN_MENU_OPTION_REGISTER = "Register";
@@ -33,8 +40,6 @@ public class App {
 	private AuthenticationService authenticationService;
 	private AccountService accountService = new AccountService(API_BASE_URL);
 	private UserService userService = new UserService();
-	private TransferTypeService transferTypeService = new TransferTypeService(API_BASE_URL);
-	private TransferStatusService transferStatusService = new TransferStatusService(API_BASE_URL);
 	private TransferService transferService = new TransferService(API_BASE_URL);
 
 
@@ -109,8 +114,8 @@ public class App {
 
 	private void viewPendingRequests() {
 		Transfer[] transfers = transferService.getPendingTransfersByUserId(currentUser);
-		if(transfers==null) {
-			System.out.println("You don't have any pending requests");
+		if(transfers.length==0) {
+			console.getUserInput("\nYou don't have any pending requests, press Enter to continue");
 			return;
 		}
 
@@ -138,7 +143,8 @@ public class App {
 		int userIdChoice = console.getUserInputInteger("Enter ID of user you are sending to (0 to cancel)");
 		if (validateUserChoice(userIdChoice, users, currentUser)) {
 			String amountChoice = console.getUserInput("Enter amount");
-			createTransfer(userIdChoice, amountChoice, "Send", "Approved");
+			createTransfer(userIdChoice, amountChoice, TRANSFER_TYPE_SEND, TRANSFER_STATUS_APPROVED);
+
 		}
 	}
 
@@ -148,7 +154,8 @@ public class App {
 		int userIdChoice = console.getUserInputInteger("Enter ID of user you are requesting from (0 to cancel)");
 		if (validateUserChoice(userIdChoice, users, currentUser)) {
 			String amountChoice = console.getUserInput("Enter amount");
-			createTransfer(userIdChoice, amountChoice, "Request", "Pending");
+			createTransfer(userIdChoice, amountChoice, TRANSFER_TYPE_REQUEST, TRANSFER_STATUS_PENDING );
+
 		}
 	}
 
@@ -212,13 +219,11 @@ public class App {
 		return new UserCredentials(username, password);
 	}
 
-	private Transfer createTransfer (int accountChoiceUserId, String amountString, String transferType, String status){
+	private Transfer createTransfer (int accountChoiceUserId, String amountString, int transferTypeId, int transferStatusId){
 
-		int transferTypeId = transferTypeService.getTransferType(currentUser, transferType).getTransferTypeId();
-		int transferStatusId = transferStatusService.getTransferStatus(currentUser, status).getTransferStatusId();
 		int accountToId;
 		int accountFromId;
-		if(transferType.equals("Send")) {
+		if(transferTypeId==TRANSFER_TYPE_SEND) {
 			accountToId = accountService.getAccountByUserId(currentUser, accountChoiceUserId).getAccountId();
 			accountFromId = accountService.getAccountByUserId(currentUser, currentUser.getUser().getId()).getAccountId();
 		} else {
@@ -254,8 +259,6 @@ public class App {
 	private void printTransferDetails(AuthenticatedUser currentUser, Transfer transferChoice) {
 		int id = transferChoice.getTransferId();
 		BigDecimal amount = transferChoice.getAmount();
-		int transactionTypeId = transferChoice.getTransferTypeId();
-		int transactionStatusId = transferChoice.getTransferStatusId();
 
 		String fromUserName = transferChoice.getUserFrom();
 		// add Me word if it's current user
@@ -268,9 +271,8 @@ public class App {
 		if(isMe(currentUser,toUserName))
 			toUserName=toUserName+" (Me)";
 
-		String transactionType = transferTypeService.getTransferTypeFromId(currentUser, transactionTypeId).getTransferTypeDescription();
-		String transactionStatus = transferStatusService.getTransferStatusById(currentUser, transactionStatusId).getTransferStatusDesc();
-
+		String transactionType = transferChoice.getTransferTypeDesc();
+		String transactionStatus = transferChoice.getTransferStatusDesc();
 		console.printTransferDetails(id, fromUserName, toUserName, transactionType, transactionStatus, amount);
 		console.getUserInput("\nPress Enter to continue");
 	}
@@ -311,7 +313,8 @@ public class App {
 				}
 				return true;
 			} catch (UserNotFoundException | InvalidUserChoiceException e) {
-				System.out.println(e.getMessage());
+				//System.out.println(e.getMessage());
+				console.getUserInput(e.getMessage()+", Press Enter to continue");
 			}
 		}
 		return false;
@@ -333,7 +336,7 @@ public class App {
 					throw new InvalidTransferIdChoice();
 				}
 			} catch (InvalidTransferIdChoice e) {
-				System.out.println(e.getMessage());
+				console.getUserInput(e.getMessage()+", Press Enter to continue");
 			}
 		}
 		return transferChoice;
@@ -346,11 +349,9 @@ public class App {
 
 		if(choice != 0) {
 			if(choice == 1) {
-				int transferStatusId = transferStatusService.getTransferStatus(currentUser, "Approved").getTransferStatusId();
-				pendingTransfer.setTransferStatusId(transferStatusId);
+				pendingTransfer.setTransferStatusId(TRANSFER_STATUS_APPROVED);
 			} else if (choice == 2) {
-				int transferStatusId = transferStatusService.getTransferStatus(currentUser, "Rejected").getTransferStatusId();
-				pendingTransfer.setTransferStatusId(transferStatusId);
+				pendingTransfer.setTransferStatusId(TRANSFER_STATUS_REJECTED);
 			} else {
 				System.out.println("Invalid choice.");
 			}
