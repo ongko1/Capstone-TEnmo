@@ -1,7 +1,7 @@
 package com.techelevator.tenmo.controller;
 
 import com.techelevator.tenmo.dao.*;
-import com.techelevator.tenmo.exceptions.InsufficientFunds;
+import com.techelevator.tenmo.exceptions.InsufficientFundsException;
 import com.techelevator.tenmo.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,8 +15,8 @@ import java.util.List;
 @RestController
 @PreAuthorize("isAuthenticated()")
 public class TenmoController {
-    private final int TRANSFER_TYPE_REQUEST = 1;
-    private final int TRANSFER_TYPE_SEND = 2;
+    private int TRANSFER_TYPE_REQUEST = 1;
+    private int TRANSFER_TYPE_SEND = 2;
 
     private final int TRANSFER_STATUS_PENDING = 1;
     private final int TRANSFER_STATUS_APPROVED = 2;
@@ -42,7 +42,7 @@ public class TenmoController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(path="/transfers/{id}", method = RequestMethod.POST)
-    public void addTransfer(@RequestBody Transfer transfer, @PathVariable int id) throws InsufficientFunds {
+    public void addTransfer(@RequestBody Transfer transfer, @PathVariable int id) throws InsufficientFundsException {
 
         BigDecimal amountToTransfer = transfer.getAmount();
         Account accountFrom = accountDao.getAccountByAccountID(transfer.getAccountFrom());
@@ -96,7 +96,7 @@ public class TenmoController {
     }
 
     @RequestMapping(path="/transfers/{id}", method = RequestMethod.PUT)
-    public void updateTransferStatus(@RequestBody Transfer transfer, @PathVariable int id) throws InsufficientFunds {
+    public void updateTransferStatus(@RequestBody Transfer transfer, @PathVariable int id) throws InsufficientFundsException {
 
         // only go through with the transfer if it is approved
         if(transfer.getTransferStatusId() == TRANSFER_STATUS_APPROVED) {

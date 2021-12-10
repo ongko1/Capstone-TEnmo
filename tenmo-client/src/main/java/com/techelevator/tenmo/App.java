@@ -95,6 +95,10 @@ public class App {
 
 	private void viewTransferHistory() {
 		Transfer[] transfers = transferService.getTransfersFromUserId(currentUser, currentUser.getUser().getId());
+		if(transfers.length==0) {
+			console.getUserInput("\nYou don't have any transfer history, press Enter to continue");
+			return;
+		}
 
 		System.out.println("--------------------------------------------");
 		System.out.println("Transfers");
