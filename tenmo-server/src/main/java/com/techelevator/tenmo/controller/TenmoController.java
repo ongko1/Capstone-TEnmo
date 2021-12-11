@@ -11,16 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
+import static com.techelevator.tenmo.TenmoConstants.*;
 
 @RestController
 @PreAuthorize("isAuthenticated()")
 public class TenmoController {
-    private int TRANSFER_TYPE_REQUEST = 1;
-    private int TRANSFER_TYPE_SEND = 2;
-
-    private final int TRANSFER_STATUS_PENDING = 1;
-    private final int TRANSFER_STATUS_APPROVED = 2;
-    private final int TRANSFER_STATUS_REJECTED = 3;
 
     @Autowired
     private AccountDao accountDao;
@@ -44,20 +39,19 @@ public class TenmoController {
     @RequestMapping(path="/transfers/{id}", method = RequestMethod.POST)
     public void addTransfer(@RequestBody Transfer transfer, @PathVariable int id) throws InsufficientFundsException {
 
-        BigDecimal amountToTransfer = transfer.getAmount();
         Account accountFrom = accountDao.getAccountByAccountID(transfer.getAccountFrom());
         Account accountTo = accountDao.getAccountByAccountID(transfer.getAccountTo());
 
-        if(transfer.getTransferStatusId()==2) {
+        if(transfer.getTransferStatusId()==TRANSFER_STATUS_APPROVED) {
             // check balance
-            accountFrom.sendMoney(amountToTransfer);
-            accountTo.receiveMoney(amountToTransfer);
+            accountFrom.sendMoney(transfer.getAmount());
+            accountTo.receiveMoney(transfer.getAmount());
         }
         transferDao.createTransfer(transfer);
 
         // update balance
-        accountDao.updateAccount(accountFrom);
-        accountDao.updateAccount(accountTo);
+        accountDao.updateBalance(accountFrom);
+        accountDao.updateBalance(accountTo);
     }
 
     @RequestMapping(path="/account/user/{id}", method = RequestMethod.GET)
@@ -98,22 +92,22 @@ public class TenmoController {
     @RequestMapping(path="/transfers/{id}", method = RequestMethod.PUT)
     public void updateTransferStatus(@RequestBody Transfer transfer, @PathVariable int id) throws InsufficientFundsException {
 
-        // only go through with the transfer if it is approved
         if(transfer.getTransferStatusId() == TRANSFER_STATUS_APPROVED) {
+            // only update balance if it is approved
 
-            BigDecimal amountToTransfer = transfer.getAmount();
             Account accountFrom = accountDao.getAccountByAccountID(transfer.getAccountFrom());
             Account accountTo = accountDao.getAccountByAccountID(transfer.getAccountTo());
 
             // UPDATE BALANCE
-            accountFrom.sendMoney(amountToTransfer);
-            accountTo.receiveMoney(amountToTransfer);
+            accountFrom.sendMoney(transfer.getAmount());
+            accountTo.receiveMoney(transfer.getAmount());
 
             transferDao.updateTransfer(transfer);
 
-            accountDao.updateAccount(accountFrom);
-            accountDao.updateAccount(accountTo);
+            accountDao.updateBalance(accountFrom);
+            accountDao.updateBalance(accountTo);
         } else {
+            // REJECTED, UPDATE STATUS ONLY
             transferDao.updateTransfer(transfer);
         }
 

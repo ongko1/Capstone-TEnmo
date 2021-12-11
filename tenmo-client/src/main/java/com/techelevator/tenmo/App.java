@@ -1,24 +1,19 @@
 package com.techelevator.tenmo;
 
-import com.techelevator.tenmo.exceptions.InvalidTransferIdChoice;
+import com.techelevator.tenmo.exceptions.InvalidTransferIdChoiceException;
 import com.techelevator.tenmo.exceptions.InvalidUserChoiceException;
 import com.techelevator.tenmo.exceptions.UserNotFoundException;
 import com.techelevator.tenmo.model.*;
 import com.techelevator.tenmo.services.*;
 import com.techelevator.view.ConsoleService;
-import io.cucumber.java.bs.A;
 
 import java.math.BigDecimal;
+// CONSTANT VARIABLES
+import static com.techelevator.tenmo.TenmoConstants.*;
 
 public class App {
 
 	private static final String API_BASE_URL = "http://localhost:8080/";
-	private final int TRANSFER_TYPE_REQUEST = 1;
-	private final int TRANSFER_TYPE_SEND = 2;
-
-	private final int TRANSFER_STATUS_PENDING = 1;
-	private final int TRANSFER_STATUS_APPROVED = 2;
-	private final int TRANSFER_STATUS_REJECTED = 3;
 
 	// MENU OPTION LOGIN & REGISTER
 	private static final String MENU_OPTION_EXIT = "Exit";
@@ -131,7 +126,7 @@ public class App {
 		for(Transfer transfer: transfers) {
 			printTransfer(currentUser, transfer);
 		}
-		// TODO ask to view details
+		// Ask to choose pending transfer ID
 		int transferIdChoice = console.getUserInputInteger("\nPlease enter transfer ID to approve/reject (0 to cancel)");
 		Transfer transferChoice = validateTransferIdChoice(transferIdChoice, transfers, currentUser);
 		if(transferChoice != null) {
@@ -146,18 +141,20 @@ public class App {
 
 		int userIdChoice = console.getUserInputInteger("Enter ID of user you are sending to (0 to cancel)");
 		if (validateUserChoice(userIdChoice, users, currentUser)) {
-			String amountChoice = console.getUserInput("Enter amount");
+			//String amountChoice = console.getUserInput("Enter amount");
+			BigDecimal amountChoice = new BigDecimal(console.getUserInputDouble("Enter amount : "));
 			createTransfer(userIdChoice, amountChoice, TRANSFER_TYPE_SEND, TRANSFER_STATUS_APPROVED);
 
 		}
 	}
 
 	private void requestBucks () {
+		// display list of user except current user
 		User[] users = userService.getAllUsers(currentUser);
 		printUserOptions(currentUser, users);
 		int userIdChoice = console.getUserInputInteger("Enter ID of user you are requesting from (0 to cancel)");
 		if (validateUserChoice(userIdChoice, users, currentUser)) {
-			String amountChoice = console.getUserInput("Enter amount");
+			BigDecimal amountChoice = new BigDecimal(console.getUserInputDouble("Enter amount : "));
 			createTransfer(userIdChoice, amountChoice, TRANSFER_TYPE_REQUEST, TRANSFER_STATUS_PENDING );
 
 		}
@@ -223,10 +220,11 @@ public class App {
 		return new UserCredentials(username, password);
 	}
 
-	private Transfer createTransfer (int accountChoiceUserId, String amountString, int transferTypeId, int transferStatusId){
-
+	private Transfer createTransfer (int accountChoiceUserId, BigDecimal amount, int transferTypeId, int transferStatusId){
+		// method to handle sendbucks and request bucks
 		int accountToId;
 		int accountFromId;
+		// get Account ID from current user and current choice user
 		if(transferTypeId==TRANSFER_TYPE_SEND) {
 			accountToId = accountService.getAccountByUserId(currentUser, accountChoiceUserId).getAccountId();
 			accountFromId = accountService.getAccountByUserId(currentUser, currentUser.getUser().getId()).getAccountId();
@@ -235,8 +233,6 @@ public class App {
 			accountFromId = accountService.getAccountByUserId(currentUser, accountChoiceUserId).getAccountId();
 		}
 
-		BigDecimal amount = new BigDecimal(amountString);
-
 		Transfer transfer = new Transfer();
 		transfer.setAccountFrom(accountFromId);
 		transfer.setAccountTo(accountToId);
@@ -244,7 +240,8 @@ public class App {
 		transfer.setTransferStatusId(transferStatusId);
 		transfer.setTransferTypeId(transferTypeId);
 
-		transferService.createTransfer(currentUser, transfer);
+		String message = transferService.createTransfer(currentUser, transfer);
+		console.getUserInput(message+" Press Enter to continue");
 		return transfer;
 	}
 
@@ -269,15 +266,13 @@ public class App {
 		if(isMe(currentUser,fromUserName))
 			fromUserName=fromUserName+" (Me)";
 
-		// get user Id and user name from account To in transfer table
 		// add Me world if it's current user
 		String toUserName = transferChoice.getUserTo();
 		if(isMe(currentUser,toUserName))
 			toUserName=toUserName+" (Me)";
 
-		String transactionType = transferChoice.getTransferTypeDesc();
-		String transactionStatus = transferChoice.getTransferStatusDesc();
-		console.printTransferDetails(id, fromUserName, toUserName, transactionType, transactionStatus, amount);
+		console.printTransferDetails(id, fromUserName, toUserName,
+				transferChoice.getTransferTypeDesc(), transferChoice.getTransferStatusDesc(), amount);
 		console.getUserInput("\nPress Enter to continue");
 	}
 
@@ -302,11 +297,14 @@ public class App {
 		if(userIdChoice != 0) {
 			try {
 				boolean validUserIdChoice = false;
+				if(userIdChoice == currentUser.getUser().getId()) {
+					throw new InvalidUserChoiceException();
+				}
 
 				for (User user : users) {
-					if(userIdChoice == currentUser.getUser().getId()) {
-						throw new InvalidUserChoiceException();
-					}
+					//if(userIdChoice == currentUser.getUser().getId()) {
+					//	throw new InvalidUserChoiceException();
+					//}
 					if (user.getId() == userIdChoice) {
 						validUserIdChoice = true;
 						break;
@@ -317,7 +315,6 @@ public class App {
 				}
 				return true;
 			} catch (UserNotFoundException | InvalidUserChoiceException e) {
-				//System.out.println(e.getMessage());
 				console.getUserInput(e.getMessage()+", Press Enter to continue");
 			}
 		}
@@ -337,9 +334,9 @@ public class App {
 					}
 				}
 				if (!validTransferIdChoice) {
-					throw new InvalidTransferIdChoice();
+					throw new InvalidTransferIdChoiceException();
 				}
-			} catch (InvalidTransferIdChoice e) {
+			} catch (InvalidTransferIdChoiceException e) {
 				console.getUserInput(e.getMessage()+", Press Enter to continue");
 			}
 		}
@@ -359,7 +356,8 @@ public class App {
 			} else {
 				System.out.println("Invalid choice.");
 			}
-			transferService.updateTransfer(currentUser, pendingTransfer);
+			String message = transferService.updateTransfer(currentUser, pendingTransfer);
+			console.getUserInput(message+" Presss Enter to continue");
 		}
 
 	}

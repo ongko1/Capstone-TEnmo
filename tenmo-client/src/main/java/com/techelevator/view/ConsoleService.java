@@ -2,13 +2,13 @@ package com.techelevator.view;
 
 
 import com.techelevator.tenmo.model.User;
-import io.cucumber.datatable.internal.difflib.StringUtills;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.Scanner;
+import static com.techelevator.tenmo.TenmoConstants.*;
 
 public class ConsoleService {
 
@@ -78,6 +78,31 @@ public class ConsoleService {
 		return result;
 	}
 
+	public Double getUserInputDouble(String prompt) {
+		Double result = null;
+		do {
+			out.print(prompt+": ");
+			out.flush();
+			String userInput = in.nextLine();
+			try {
+				result = Double.parseDouble(userInput);
+
+				BigDecimal bd = BigDecimal.valueOf(result);
+				if (bd.scale() < 3 && bd.compareTo(BigDecimal.ZERO) > 0) {
+					continue;
+				} else {
+					out.println("\n*** " + userInput + " has too many decimal places or is negative ***\n");
+					result = null;
+				}
+
+
+			} catch(NumberFormatException e) {
+				out.println("\n*** " + userInput + " is not valid ***\n");
+			}
+		} while(result == null);
+		return result;
+	}
+
 	public void printUsers(User[] users, String userName) {
 		// list all user except current user
 		for(User user: users) {
@@ -90,9 +115,9 @@ public class ConsoleService {
 
 	public void printTransfers(int transferId, String fromOrTo, BigDecimal amount, int statusId) {
 		String status="";
-		if (statusId==1) status="Pending";
-		if (statusId==2) status="Approved";
-		if (statusId==3) status="Rejected";
+		if (statusId==TRANSFER_STATUS_PENDING) status="Pending";
+		if (statusId==TRANSFER_STATUS_APPROVED) status="Approved";
+		if (statusId==TRANSFER_STATUS_REJECTED) status="Rejected";
 		out.format("%-5d %-15s $%10s %-10s", transferId, fromOrTo, amount, status);
 		out.println();
 	}

@@ -7,17 +7,24 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import static com.techelevator.tenmo.TenmoConstants.*;
 
 @Component
 public class JdbcTransferDao implements TransferDao {
-    private final int TRANSFER_TYPE_REQUEST = 1;
-    private final int TRANSFER_TYPE_SEND = 2;
-
-    private final int TRANSFER_STATUS_PENDING = 1;
-    private final int TRANSFER_STATUS_APPROVED = 2;
-    private final int TRANSFER_STATUS_REJECTED = 3;
 
     private JdbcTemplate jdbcTemplate;
+    private static String SQL_TRANSFERS =
+            "SELECT transfer_id, transfers.transfer_type_id AS transfer_type_id, transfers.transfer_status_id AS transfer_status_id, "+
+            "tt.transfer_type_desc AS transfer_type_desc, ts.transfer_status_desc AS transfer_status_desc, " +
+            "amount, user_from.username AS user_from, " +
+            "user_to.username AS user_to, account_from.account_id AS account_from_id, account_to.account_id AS account_to_id " +
+            "FROM transfers " +
+            "JOIN accounts AS account_from ON transfers.account_from = account_from.account_id " +
+            "JOIN accounts AS account_to ON transfers.account_to = account_to.account_id " +
+            "JOIN users AS user_from ON account_from.user_id = user_from.user_id " +
+            "JOIN users AS user_to ON account_to.user_id = user_to.user_id " +
+            "JOIN transfer_types AS tt ON tt.transfer_type_id = transfers.transfer_type_id " +
+            "JOIN transfer_statuses AS ts ON ts.transfer_status_id = transfers.transfer_status_id ";
 
     public JdbcTransferDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -33,18 +40,7 @@ public class JdbcTransferDao implements TransferDao {
     @Override
     public List<Transfer> getTransferByUserId(int userId) {
         List<Transfer> transfers = new ArrayList<>();
-        String sql = "SELECT transfer_id, transfers.transfer_type_id AS transfer_type_id, transfers.transfer_status_id AS transfer_status_id, "+
-                "tt.transfer_type_desc AS transfer_type_desc, ts.transfer_status_desc AS transfer_status_desc, " +
-                "amount, user_from.username AS user_from, " +
-                "user_to.username AS user_to, account_from.account_id AS account_from_id, account_to.account_id AS account_to_id " +
-                "FROM transfers " +
-                "JOIN accounts AS account_from ON transfers.account_from = account_from.account_id " +
-                "JOIN accounts AS account_to ON transfers.account_to = account_to.account_id " +
-                "JOIN users AS user_from ON account_from.user_id = user_from.user_id " +
-                "JOIN users AS user_to ON account_to.user_id = user_to.user_id " +
-                "JOIN transfer_types AS tt ON tt.transfer_type_id = transfers.transfer_type_id " +
-                "JOIN transfer_statuses AS ts ON ts.transfer_status_id = transfers.transfer_status_id " +
-                "WHERE account_from.user_id = ? OR account_to.user_id = ?;";
+        String sql = SQL_TRANSFERS + "WHERE account_from.user_id = ? OR account_to.user_id = ?;";
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, userId, userId);
         while (rowSet.next()) {
             transfers.add(mapRowToTransfer(rowSet));
@@ -55,18 +51,8 @@ public class JdbcTransferDao implements TransferDao {
     @Override
     public Transfer getTransferByTransferId(int id) {
         Transfer transfer;
-        String sql = "SELECT transfer_id, transfers.transfer_type_id AS transfer_type_id, transfers.transfer_status_id AS transfer_status_id, "+
-                "tt.transfer_type_desc AS transfer_type_desc, ts.transfer_status_desc AS transfer_status_desc, " +
-                "amount, user_from.username AS user_from, " +
-                "user_to.username AS user_to, account_from.account_id AS account_from_id, account_to.account_id AS account_to_id " +
-                "FROM transfers " +
-                "JOIN accounts AS account_from ON transfers.account_from = account_from.account_id " +
-                "JOIN accounts AS account_to ON transfers.account_to = account_to.account_id " +
-                "JOIN users AS user_from ON account_from.user_id = user_from.user_id " +
-                "JOIN users AS user_to ON account_to.user_id = user_to.user_id " +
-                "JOIN transfer_types AS tt ON tt.transfer_type_id = transfers.transfer_type_id " +
-                "JOIN transfer_statuses AS ts ON ts.transfer_status_id = transfers.transfer_status_id " +
-                "WHERE transfer_id = ?;";
+        String sql = SQL_TRANSFERS + "WHERE transfer_id = ?;";
+
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, id);
         if (rowSet.next()) {
             transfer = mapRowToTransfer(rowSet);
@@ -79,17 +65,8 @@ public class JdbcTransferDao implements TransferDao {
     @Override
     public List<Transfer> getAllTransfers() {
         List<Transfer> transfers = new ArrayList<>();
-        String sql = "SELECT transfer_id, transfers.transfer_type_id AS transfer_type_id, transfers.transfer_status_id AS transfer_status_id, "+
-                "tt.transfer_type_desc AS transfer_type_desc, ts.transfer_status_desc AS transfer_status_desc, " +
-                "amount, user_from.username AS user_from, " +
-                "user_to.username AS user_to, account_from.account_id AS account_from_id, account_to.account_id AS account_to_id " +
-                "FROM transfers " +
-                "JOIN accounts AS account_from ON transfers.account_from = account_from.account_id " +
-                "JOIN accounts AS account_to ON transfers.account_to = account_to.account_id " +
-                "JOIN users AS user_from ON account_from.user_id = user_from.user_id " +
-                "JOIN users AS user_to ON account_to.user_id = user_to.user_id " +
-                "JOIN transfer_types AS tt ON tt.transfer_type_id = transfers.transfer_type_id " +
-                "JOIN transfer_statuses AS ts ON ts.transfer_status_id = transfers.transfer_status_id;";
+        String sql = SQL_TRANSFERS;
+
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql);
         while (rowSet.next()) {
             transfers.add(mapRowToTransfer(rowSet));
@@ -100,18 +77,8 @@ public class JdbcTransferDao implements TransferDao {
     @Override
     public List<Transfer> getPendingTransfers(int userId) {
         List<Transfer> transfers = new ArrayList<>();
-        String sql = "SELECT transfer_id, transfers.transfer_type_id AS transfer_type_id, transfers.transfer_status_id AS transfer_status_id, "+
-                "tt.transfer_type_desc AS transfer_type_desc, ts.transfer_status_desc AS transfer_status_desc, " +
-                "amount, user_from.username AS user_from, " +
-                "user_to.username AS user_to, account_from.account_id AS account_from_id, account_to.account_id AS account_to_id " +
-                "FROM transfers " +
-                "JOIN accounts AS account_from ON transfers.account_from = account_from.account_id " +
-                "JOIN accounts AS account_to ON transfers.account_to = account_to.account_id " +
-                "JOIN users AS user_from ON account_from.user_id = user_from.user_id " +
-                "JOIN users AS user_to ON account_to.user_id = user_to.user_id " +
-                "JOIN transfer_types AS tt ON tt.transfer_type_id = transfers.transfer_type_id " +
-                "JOIN transfer_statuses AS ts ON ts.transfer_status_id = transfers.transfer_status_id " +
-                "WHERE account_from.user_id = ? AND transfers.transfer_status_id = ?";
+        String sql = SQL_TRANSFERS + "WHERE account_from.user_id = ? AND transfers.transfer_status_id = ?";
+
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, userId, TRANSFER_STATUS_PENDING);
         while (rowSet.next()) {
             transfers.add(mapRowToTransfer(rowSet));

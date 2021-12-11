@@ -9,7 +9,7 @@ public interface AccountDao {
     Account getAccountByUserID(int userId);
     Account getAccountByAccountID(int accountId);
 
-    void updateAccount(Account accountToUpdate);
+    void updateBalance(Account accountToUpdate);
 
 }
 
