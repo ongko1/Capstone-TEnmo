@@ -26,7 +26,6 @@ public class TenmoController {
 
     @RequestMapping(path = "/balance", method = RequestMethod.GET)
     public BigDecimal getBalance(Principal principal) {
-        System.out.println(principal.getName());
         return accountDao.getBalance(principal.getName());
     }
 
@@ -101,11 +100,11 @@ public class TenmoController {
             // UPDATE BALANCE
             accountFrom.sendMoney(transfer.getAmount());
             accountTo.receiveMoney(transfer.getAmount());
+            accountDao.updateBalance(accountFrom);
+            accountDao.updateBalance(accountTo);
 
             transferDao.updateTransfer(transfer);
 
-            accountDao.updateBalance(accountFrom);
-            accountDao.updateBalance(accountTo);
         } else {
             // REJECTED, UPDATE STATUS ONLY
             transferDao.updateTransfer(transfer);
