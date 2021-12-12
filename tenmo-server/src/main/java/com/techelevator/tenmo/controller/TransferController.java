@@ -44,19 +44,13 @@ public class TransferController {
     @RequestMapping(path="/transfers/{id}", method = RequestMethod.POST)
     public void addTransfer(@RequestBody Transfer transfer, @PathVariable int id) throws InsufficientFundsException {
 
-        Account accountFrom = accountDao.getAccountByAccountID(transfer.getAccountFrom());
-        Account accountTo = accountDao.getAccountByAccountID(transfer.getAccountTo());
-
         if(transfer.getTransferStatusId()==TRANSFER_STATUS_APPROVED) {
-            // check balance
-            accountFrom.sendMoney(transfer.getAmount());
-            accountTo.receiveMoney(transfer.getAmount());
+            // only update balance if it is approved
+            // check balance from account and update BALANCE for both account
+            accountDao.checkAndUpdateBalance(transfer.getAmount(), transfer.getAccountFrom(), transfer.getAccountTo());
         }
         transferDao.createTransfer(transfer);
 
-        // update balance
-        accountDao.updateBalance(accountFrom);
-        accountDao.updateBalance(accountTo);
     }
 
     @RequestMapping(path="/transfers/{id}", method = RequestMethod.PUT)
@@ -64,22 +58,11 @@ public class TransferController {
 
         if(transfer.getTransferStatusId() == TRANSFER_STATUS_APPROVED) {
             // only update balance if it is approved
-
-            Account accountFrom = accountDao.getAccountByAccountID(transfer.getAccountFrom());
-            Account accountTo = accountDao.getAccountByAccountID(transfer.getAccountTo());
-
-            // UPDATE BALANCE
-            accountFrom.sendMoney(transfer.getAmount());
-            accountTo.receiveMoney(transfer.getAmount());
-            accountDao.updateBalance(accountFrom);
-            accountDao.updateBalance(accountTo);
-
-            transferDao.updateTransfer(transfer);
-
-        } else {
-            // REJECTED, UPDATE STATUS ONLY
-            transferDao.updateTransfer(transfer);
+            // check balance from account and update BALANCE for both account
+            accountDao.checkAndUpdateBalance(transfer.getAmount(), transfer.getAccountFrom(), transfer.getAccountTo());
         }
+        // update transfer status APPROVED or REJECTED
+        transferDao.updateTransfer(transfer);
 
     }
 }

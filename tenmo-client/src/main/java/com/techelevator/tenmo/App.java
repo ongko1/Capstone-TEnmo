@@ -141,7 +141,6 @@ public class App {
 
 		int userIdChoice = console.getUserInputInteger("Enter ID of user you are sending to (0 to cancel)");
 		if (validateUserChoice(userIdChoice, users, currentUser)) {
-			//String amountChoice = console.getUserInput("Enter amount");
 			BigDecimal amountChoice = new BigDecimal(console.getUserInputDouble("Enter amount"));
 			createTransfer(userIdChoice, amountChoice, TRANSFER_TYPE_SEND, TRANSFER_STATUS_APPROVED);
 

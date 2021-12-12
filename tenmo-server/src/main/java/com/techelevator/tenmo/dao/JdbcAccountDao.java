@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.exceptions.InsufficientFundsException;
 import com.techelevator.tenmo.model.Account;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -23,10 +24,6 @@ public class JdbcAccountDao implements AccountDao {
         BigDecimal balance = null;
 
         if (results.next()) {
-            /*
-            String accountBalance = results.getString("balance");
-            balance = new BigDecimal(accountBalance);
-             */
             balance = new BigDecimal(results.getString("balance"));
         }
         return balance;
@@ -57,14 +54,30 @@ public class JdbcAccountDao implements AccountDao {
     }
 
     @Override
-    public void updateBalance(Account accountToUpdate) {
+    public void checkAndUpdateBalance(BigDecimal amount, int accountIdFrom, int accountIdTo) throws InsufficientFundsException{
+        checkBalance(amount, accountIdFrom);
         String sql = "UPDATE accounts " +
-                "SET balance = ? " +
-                "WHERE account_id = ?";
+                "SET balance = balance - ? " + // new updated sender balance
+                "WHERE account_id = ?; ";
+        jdbcTemplate.update(sql, amount, accountIdFrom);
 
-        jdbcTemplate.update(sql, accountToUpdate.getBalance(), accountToUpdate.getAccountId());
+        sql = "UPDATE accounts " +
+                "SET balance = balance + ? " + // new updated sender balance
+                "WHERE account_id = ?; ";
+        jdbcTemplate.update(sql, amount, accountIdTo);
     }
 
+    private void checkBalance(BigDecimal amount, int accountIdFrom) throws InsufficientFundsException {
+        String sql = "SELECT (balance >= ?) as is_valid " +
+                "FROM accounts " +
+                "WHERE account_id = ?;";
+        SqlRowSet isValid = jdbcTemplate.queryForRowSet(sql, amount , accountIdFrom);
+        if (isValid.next()) {
+            if (!isValid.getBoolean("is_valid"))
+                throw new InsufficientFundsException();
+        }
+
+    }
 
     private Account mapRowToAccount(SqlRowSet rs) {
         Account account = new Account();
