@@ -95,18 +95,18 @@ public class JdbcTransferDao implements TransferDao {
         jdbcTemplate.update(sql, transfer.getTransferStatusId(), transfer.getTransferId());
     }
 
-    private Transfer mapRowToTransfer(SqlRowSet rowSet) {
+    private Transfer mapRowToTransfer(SqlRowSet rs) {
         Transfer transfer = new Transfer();
-        transfer.setTransferId(rowSet.getInt("transfer_id"));
-        transfer.setTransferTypeId(rowSet.getInt("transfer_type_id"));
-        transfer.setTransferStatusId(rowSet.getInt("transfer_status_id"));
-        transfer.setAccountFrom(rowSet.getInt("account_from_id"));
-        transfer.setAccountTo(rowSet.getInt("account_to_id"));
-        transfer.setUserFrom(rowSet.getString("user_from"));
-        transfer.setUserTo(rowSet.getString("user_to"));
-        transfer.setAmount(rowSet.getBigDecimal("amount"));
-        transfer.setTransferTypeDesc(rowSet.getString("transfer_type_desc"));
-        transfer.setTransferStatusDesc(rowSet.getString("transfer_status_desc"));
+        transfer.setTransferId(rs.getInt("transfer_id"));
+        transfer.setTransferTypeId(rs.getInt("transfer_type_id"));
+        transfer.setTransferStatusId(rs.getInt("transfer_status_id"));
+        transfer.setAccountFrom(rs.getInt("account_from_id"));
+        transfer.setAccountTo(rs.getInt("account_to_id"));
+        transfer.setUserFrom(rs.getString("user_from"));
+        transfer.setUserTo(rs.getString("user_to"));
+        transfer.setAmount(rs.getBigDecimal("amount"));
+        transfer.setTransferTypeDesc(rs.getString("transfer_type_desc"));
+        transfer.setTransferStatusDesc(rs.getString("transfer_status_desc"));
 
         return transfer;
     }

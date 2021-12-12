@@ -23,8 +23,11 @@ public class JdbcAccountDao implements AccountDao {
         BigDecimal balance = null;
 
         if (results.next()) {
+            /*
             String accountBalance = results.getString("balance");
             balance = new BigDecimal(accountBalance);
+             */
+            balance = new BigDecimal(results.getString("balance"));
         }
         return balance;
 
@@ -37,7 +40,7 @@ public class JdbcAccountDao implements AccountDao {
         SqlRowSet result = jdbcTemplate.queryForRowSet(sql, userId);
         Account account = null;
         if(result.next()) {
-            account = mapResultsToAccount(result);
+            account = mapRowToAccount(result);
         }
         return account;
     }
@@ -48,7 +51,7 @@ public class JdbcAccountDao implements AccountDao {
         SqlRowSet result = jdbcTemplate.queryForRowSet(sql, accountId);
         Account account = null;
         if(result.next()) {
-            account = mapResultsToAccount(result);
+            account = mapRowToAccount(result);
         }
         return account;
     }
@@ -63,10 +66,12 @@ public class JdbcAccountDao implements AccountDao {
     }
 
 
-    private Account mapResultsToAccount(SqlRowSet result) {
-        int accountId = result.getInt("account_id");
-        int userAccountId = result.getInt("user_id");
-        BigDecimal accountBalance = result.getBigDecimal("balance");
-        return new Account(accountId, userAccountId, accountBalance);
+    private Account mapRowToAccount(SqlRowSet rs) {
+        Account account = new Account();
+        account.setAccountId(rs.getInt("account_id"));
+        account.setUserId(rs.getInt("user_id"));
+        account.setBalance(rs.getBigDecimal("balance"));
+        return account;
+
     }
 }
