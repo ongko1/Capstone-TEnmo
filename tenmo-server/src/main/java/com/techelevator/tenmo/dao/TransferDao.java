@@ -13,7 +13,7 @@ public interface TransferDao {
 
     List<Transfer> getAllTransfers();
 
-    List<Transfer> getPendingTransfers(int userId);
+    List<Transfer> getPendingTransfersByUserId(int userId);
 
     void updateTransfer(Transfer transfer2);
 }

@@ -253,7 +253,10 @@ public class App {
 			fromOrTo = "To: "+transfer.getUserTo();
 		}
 
-		console.printTransfers(transfer.getTransferId(), fromOrTo, transfer.getAmount(), transfer.getTransferStatusId());
+		console.printTransfers(transfer.getTransferId(),
+				fromOrTo,
+				transfer.getAmount(),
+				transfer.getTransferStatusDesc());
 	}
 
 
@@ -354,10 +357,10 @@ public class App {
 			} else if (choice == 2) {
 				pendingTransfer.setTransferStatusId(TRANSFER_STATUS_REJECTED);
 			} else {
-				System.out.println("Invalid choice.");
+				console.getUserInput("Invalid choice, Press Enter to continue"); return;
 			}
 			String message = transferService.updateTransfer(currentUser, pendingTransfer);
-			console.getUserInput(message+" Presss Enter to continue");
+			console.getUserInput(message+" Press Enter to continue");
 		}
 
 	}

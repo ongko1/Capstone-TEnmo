@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.Scanner;
-import static com.techelevator.tenmo.TenmoConstants.*;
 
 public class ConsoleService {
 
@@ -113,11 +112,7 @@ public class ConsoleService {
 		out.flush();
 	}
 
-	public void printTransfers(int transferId, String fromOrTo, BigDecimal amount, int statusId) {
-		String status="";
-		if (statusId==TRANSFER_STATUS_PENDING) status="Pending";
-		if (statusId==TRANSFER_STATUS_APPROVED) status="Approved";
-		if (statusId==TRANSFER_STATUS_REJECTED) status="Rejected";
+	public void printTransfers(int transferId, String fromOrTo, BigDecimal amount, String status) {
 		out.format("%-5d %-15s $%10s %-10s", transferId, fromOrTo, amount, status);
 		out.println();
 	}

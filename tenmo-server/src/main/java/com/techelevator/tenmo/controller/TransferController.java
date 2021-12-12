@@ -8,30 +8,36 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.security.Principal;
 import java.util.List;
 import static com.techelevator.tenmo.TenmoConstants.*;
 
 @RestController
 @PreAuthorize("isAuthenticated()")
-public class TenmoController {
+public class TransferController {
 
     @Autowired
     private AccountDao accountDao;
     @Autowired
-    private UserDao userDao;
-    @Autowired
     private  TransferDao transferDao;
 
-    @RequestMapping(path = "/balance", method = RequestMethod.GET)
-    public BigDecimal getBalance(Principal principal) {
-        return accountDao.getBalance(principal.getName());
+    @RequestMapping(path="/transfers/{id}", method = RequestMethod.GET)
+    public Transfer getTransferByTransferId(@PathVariable int id) {
+        return transferDao.getTransferByTransferId(id);
     }
 
-    @RequestMapping(path="/users", method = RequestMethod.GET)
-    public List<User> getUsers() {
-        return userDao.findAll();
+    @RequestMapping(path="/transfers", method = RequestMethod.GET)
+    public List<Transfer> getAllTransfers() {
+        return transferDao.getAllTransfers();
+    }
+
+    @RequestMapping(path="/transfers/user/{userId}", method = RequestMethod.GET)
+    public List<Transfer> getTransferByUserId(@PathVariable int userId) {
+        return transferDao.getTransferByUserId(userId);
+    }
+
+    @RequestMapping(path="/transfers/user/{userId}/pending", method = RequestMethod.GET)
+    public List<Transfer> getPendingTransfersByUserId(@PathVariable int userId) {
+        return transferDao.getPendingTransfersByUserId(userId);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -51,41 +57,6 @@ public class TenmoController {
         // update balance
         accountDao.updateBalance(accountFrom);
         accountDao.updateBalance(accountTo);
-    }
-
-    @RequestMapping(path="/account/user/{id}", method = RequestMethod.GET)
-    public Account getAccountByUserId(@PathVariable int id) {
-        return accountDao.getAccountByUserID(id);
-    }
-
-    @RequestMapping(path="/account/{id}", method = RequestMethod.GET)
-    public Account getAccountFromAccountId(@PathVariable int id) {
-        return accountDao.getAccountByAccountID(id);
-    }
-
-    @RequestMapping(path="/transfers/{id}", method = RequestMethod.GET)
-    public Transfer getTransferById(@PathVariable int id) {
-        return transferDao.getTransferByTransferId(id);
-    }
-
-    @RequestMapping(path="/transfers", method = RequestMethod.GET)
-    public List<Transfer> getAllTransfers() {
-        return transferDao.getAllTransfers();
-    }
-
-    @RequestMapping(path="/transfers/user/{userId}", method = RequestMethod.GET)
-    public List<Transfer> getTransferByUserId(@PathVariable int userId) {
-        return transferDao.getTransferByUserId(userId);
-    }
-
-    @RequestMapping(path="/users/{id}", method = RequestMethod.GET)
-    public User getUserByUserId(@PathVariable int id) {
-        return userDao.getUserByUserId(id);
-    }
-
-    @RequestMapping(path="/transfers/user/{userId}/pending", method = RequestMethod.GET)
-    public List<Transfer> getPendingTransfersByUserId(@PathVariable int userId) {
-        return transferDao.getPendingTransfers(userId);
     }
 
     @RequestMapping(path="/transfers/{id}", method = RequestMethod.PUT)
