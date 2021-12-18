@@ -16,10 +16,12 @@ public class AccountController {
 
     @Autowired
     private AccountDao accountDao;
+    @Autowired
+    private UserDao userDao;
 
     @RequestMapping(path = "/balance", method = RequestMethod.GET)
     public BigDecimal getBalance(Principal principal) {
-        return accountDao.getBalance(principal.getName());
+        return accountDao.getBalance(userDao.findIdByUsername(principal.getName()));
     }
 
     @RequestMapping(path="/account/user/{id}", method = RequestMethod.GET)

@@ -5,6 +5,7 @@ import com.techelevator.tenmo.model.Account;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
@@ -18,9 +19,9 @@ public class JdbcAccountDao implements AccountDao {
     }
 
     @Override
-    public BigDecimal getBalance(String user) {
-        String sql = "SELECT balance FROM accounts JOIN users ON accounts.user_id = users.user_id WHERE username = ?";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, user);
+    public BigDecimal getBalance(int userId) {
+        String sql = "SELECT balance FROM accounts  WHERE user_id = ?";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
         BigDecimal balance = null;
 
         if (results.next()) {
@@ -54,6 +55,7 @@ public class JdbcAccountDao implements AccountDao {
     }
 
     @Override
+    @Transactional
     public void checkAndUpdateBalance(BigDecimal amount, int accountIdFrom, int accountIdTo) throws InsufficientFundsException{
         checkBalance(amount, accountIdFrom);
         String sql = "UPDATE accounts " +
